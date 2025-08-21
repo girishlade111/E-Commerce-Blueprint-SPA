@@ -1,0 +1,706 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Interactive Blueprint: Custom Apparel Store</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <!-- Chosen Palette: Warm Neutral Harmony -->
+    <!-- Application Structure Plan: The application uses a persistent sidebar navigation and a dynamic main content area. This task-oriented structure (e.g., "Feature Explorer," "Database Visualizer") allows users to intuitively access specific information without linear scrolling. This is superior to a static document for exploring complex, interconnected technical details, as it enables users to quickly jump between components like features, their related API endpoints, and database tables. The core interaction is based on selecting a view from the sidebar, which then populates the main area with interactive content, promoting exploration and comparison. -->
+    <!-- Visualization & Content Choices: 
+        - Report Info: Project scope summary -> Goal: Inform -> Viz: Donut Chart & Stat Cards -> Interaction: Hover on chart -> Justification: Provides a quick, quantitative overview of the project's scale, more engaging than a text summary. -> Library: Chart.js.
+        - Report Info: Feature list -> Goal: Organize/Explore -> Viz: Three-column master-detail layout -> Interaction: Click to filter and view details -> Justification: Manages information density by breaking down a long, nested list into a navigable, interactive explorer. -> Library: Vanilla JS.
+        - Report Info: Database Schema & API Endpoints -> Goal: Organize/Reference -> Viz: Interactive, expandable lists -> Interaction: Click to expand details -> Justification: Mimics standard, user-friendly API/DB documentation tools, making technical data easy to parse and reference. -> Library: Vanilla JS.
+        - Report Info: System Architecture (Security, DevOps) -> Goal: Organize/Relationships -> Viz: HTML/CSS-based diagram -> Interaction: Click component to see details -> Justification: Visually represents the relationships between different parts of the system architecture, which is more intuitive than separate text blocks. -> Library: Vanilla JS.
+    -->
+    <!-- CONFIRMATION: NO SVG graphics used. NO Mermaid JS used. -->
+    <style>
+        body { font-family: 'Inter', sans-serif; }
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');
+        .chart-container {
+            position: relative;
+            width: 100%;
+            max-width: 450px;
+            margin-left: auto;
+            margin-right: auto;
+            height: 300px;
+            max-height: 400px;
+        }
+        @media (min-width: 768px) {
+            .chart-container {
+                height: 400px;
+            }
+        }
+        .nav-link {
+            transition: all 0.2s ease-in-out;
+        }
+        .nav-link.active {
+            background-color: #4338ca; /* indigo-700 */
+            color: white;
+            font-weight: 600;
+        }
+        .nav-link:not(.active):hover {
+            background-color: #eef2ff; /* indigo-50 */
+            color: #312e81; /* indigo-900 */
+        }
+        .content-view {
+            display: none;
+        }
+        .content-view.active {
+            display: block;
+        }
+        .feature-btn.active {
+            background-color: #4f46e5; /* indigo-600 */
+            color: white;
+        }
+        .feature-list-item.active {
+            background-color: #e0e7ff; /* indigo-200 */
+        }
+        .db-table-item.active {
+            background-color: #e0e7ff; /* indigo-200 */
+        }
+        .api-endpoint {
+            cursor: pointer;
+            transition: background-color 0.2s;
+        }
+        .api-endpoint .details {
+            max-height: 0;
+            overflow: hidden;
+            transition: max-height 0.3s ease-in-out;
+        }
+        .api-endpoint.open .details {
+            max-height: 500px;
+        }
+    </style>
+</head>
+<body class="bg-slate-50 text-slate-800">
+
+    <div class="min-h-screen md:grid md:grid-cols-[280px_1fr]">
+        <nav id="sidebar-nav" class="bg-white border-r border-slate-200 p-4 flex flex-col">
+            <h1 class="text-xl font-bold text-indigo-800 mb-6 px-2">Interactive Blueprint</h1>
+            <ul class="space-y-2">
+                <li><a href="#" class="nav-link flex items-center gap-3 p-2 rounded-md active" data-view="dashboard">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"></path><polyline points="3.27 6.96 12 12.01 20.73 6.96"></polyline><line x1="12" y1="22.08" x2="12" y2="12"></line></svg>
+                    <span>Dashboard</span>
+                </a></li>
+                <li><a href="#" class="nav-link flex items-center gap-3 p-2 rounded-md" data-view="tech-stack">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="16 18 22 12 16 6"></polyline><polyline points="8 6 2 12 8 18"></polyline></svg>
+                    <span>Technology Stack</span>
+                </a></li>
+                <li><a href="#" class="nav-link flex items-center gap-3 p-2 rounded-md" data-view="feature-explorer">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 20h9"></path><path d="M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4L16.5 3.5z"></path></svg>
+                    <span>Feature Explorer</span>
+                </a></li>
+                <li><a href="#" class="nav-link flex items-center gap-3 p-2 rounded-md" data-view="database-schema">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><ellipse cx="12" cy="5" rx="9" ry="3"></ellipse><path d="M21 12c0 1.66-4 3-9 3s-9-1.34-9-3"></path><path d="M3 5v14c0 1.66 4 3 9 3s9-1.34 9-3V5"></path></svg>
+                    <span>Database Schema</span>
+                </a></li>
+                <li><a href="#" class="nav-link flex items-center gap-3 p-2 rounded-md" data-view="api-reference">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10 20v-6m0-4V4"></path><path d="M14 20v-2m0-4V4"></path><path d="M4 20v-4m0-4V4"></path><path d="M18 16V4"></path><path d="M20 20v-5.5m0-3V4"></path></svg>
+                    <span>API Reference</span>
+                </a></li>
+                <li><a href="#" class="nav-link flex items-center gap-3 p-2 rounded-md" data-view="system-architecture">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12.22 2h-.44a2 2 0 0 0-2 2v.18a2 2 0 0 1-1 1.73l-.43.25a2 2 0 0 1-2 0l-.15-.08a2 2 0 0 0-2.73.73l-.22.38a2 2 0 0 0 .73 2.73l.15.1a2 2 0 0 1 0 2l-.15.08a2 2 0 0 0-.73 2.73l.22.38a2 2 0 0 0 2.73.73l.15-.08a2 2 0 0 1 2 0l.43.25a2 2 0 0 1 1 1.73V20a2 2 0 0 0 2 2h.44a2 2 0 0 0 2-2v-.18a2 2 0 0 1 1-1.73l.43-.25a2 2 0 0 1 2 0l.15.08a2 2 0 0 0 2.73-.73l.22-.38a2 2 0 0 0-.73-2.73l-.15-.08a2 2 0 0 1 0-2l.15-.08a2 2 0 0 0 .73-2.73l-.22-.38a2 2 0 0 0-2.73-.73l-.15.08a2 2 0 0 1-2 0l-.43-.25a2 2 0 0 1-1-1.73V4a2 2 0 0 0-2-2z"></path><circle cx="12" cy="12" r="3"></circle></svg>
+                    <span>System Architecture</span>
+                </a></li>
+            </ul>
+        </nav>
+        
+        <main class="p-4 md:p-8 overflow-y-auto">
+            <div id="dashboard" class="content-view active"></div>
+            <div id="tech-stack" class="content-view"></div>
+            <div id="feature-explorer" class="content-view"></div>
+            <div id="database-schema" class="content-view"></div>
+            <div id="api-reference" class="content-view"></div>
+            <div id="system-architecture" class="content-view"></div>
+        </main>
+    </div>
+
+<script>
+const data = {
+    dashboard: {
+        title: "Project Dashboard: Custom Apparel Store",
+        intro: "This dashboard provides a high-level overview of the e-commerce blueprint. It summarizes the project's scope, including the total number of features, database tables, and API endpoints defined in the plan. The chart visualizes the distribution of work across the main components of the application.",
+        stats: [
+            { label: "Total Features", value: 21, icon: '✨' },
+            { label: "Database Tables", value: 7, icon: '🗃️' },
+            { label: "API Endpoints", value: 16, icon: '🔗' }
+        ],
+        chartData: {
+            labels: ['Frontend Features', 'Backend Logic', 'Admin Panel Features'],
+            data: [10, 6, 5]
+        }
+    },
+    techStack: {
+        title: "Recommended Technology Stack",
+        intro: "The PERN stack (PostgreSQL, Express, React, Node.js) with Next.js is recommended for its performance, scalability, and excellent developer experience. This section details the specific frameworks, libraries, and tools chosen for each part of the application, from the user interface to the database.",
+        stacks: [
+            { 
+                name: "Frontend",
+                technologies: [
+                    { name: "Next.js (React)", description: "For Server-Side Rendering (SSR) and Static Site Generation (SSG), ensuring fast page loads and strong SEO." },
+                    { name: "Tailwind CSS", description: "A utility-first CSS framework for rapid and consistent UI development." },
+                    { name: "Zustand", description: "A lightweight state management library for React." },
+                    { name: "Fabric.js / Konva.js", description: "Powerful HTML5 canvas libraries for building the interactive product customizer." },
+                    { name: "SWR / React Query", description: "For efficient data fetching, caching, and state synchronization." }
+                ]
+            },
+            {
+                name: "Backend",
+                technologies: [
+                    { name: "Node.js", description: "An asynchronous JavaScript runtime ideal for building scalable network applications." },
+                    { name: "Express.js", description: "A minimal and flexible web application framework for Node.js, used to build the RESTful API." },
+                    { name: "PostgreSQL", description: "A robust, open-source relational database for structured e-commerce data." },
+                    { name: "Prisma", description: "A modern, type-safe Object-Relational Mapper (ORM) that simplifies database access." }
+                ]
+            },
+            {
+                name: "Shared",
+                technologies: [
+                    { name: "Zod", description: "A TypeScript-first schema declaration and validation library for end-to-end type safety." }
+                ]
+            }
+        ]
+    },
+    featureExplorer: {
+        title: "Interactive Feature Explorer",
+        intro: "Explore the application's features, broken down by component: Frontend (customer-facing), Backend (server logic), and Admin Panel. Select a component to see its list of features, then click on a specific feature to view its detailed user stories. This allows for a clear understanding of the functionality from both a user and developer perspective.",
+        categories: {
+            frontend: {
+                name: "Frontend",
+                features: [
+                    { name: "User Authentication", stories: ["As a new user, I want to sign up with my email and password...", "As a returning user, I want to log in securely..."] },
+                    { name: "Homepage", stories: ["As a visitor, I want to see featured products, popular designs, and clear calls-to-action..."] },
+                    { name: "Product Listing Page", stories: ["As a customer, I want to browse all available apparel and filter them..."] },
+                    { name: "Product Detail Page", stories: ["As a customer, I want to view detailed information about a garment before customizing..."] },
+                    { name: "Shopping Cart", stories: ["As a customer, I want to add multiple items, adjust quantities, and see a summary..."] },
+                    { name: "Checkout", stories: ["As a customer, I want a simple, secure, multi-step checkout process..."] },
+                    { name: "User Account Dashboard", stories: ["As a logged-in user, I want to view my order history, track shipments, and manage addresses..."] },
+                    { name: "Product Customizer Tool", stories: ["As a designer, I want to select a blank product as my canvas.", "As a creative user, I want to upload my own images...", "As a user, I want to add and style text...", "As a designer, I want to drag, resize, and rotate elements..."] },
+                    { name: "Live Preview", stories: ["As I customize, I want to see a real-time preview of my design...", "As a customer, I want to change the product color and see my design update instantly..."] },
+                    { name: "Design Management", stories: ["As a logged-in user, I want to save my in-progress design to finish later..."] }
+                ]
+            },
+            backend: {
+                name: "Backend",
+                features: [
+                    { name: "API Authentication", stories: ["As a developer, I need a secure endpoint for registration/login that returns a JWT.", "As a developer, I need middleware to protect routes..."] },
+                    { name: "Product Catalog Mgmt", stories: ["As a developer, I need API endpoints for CRUD operations on products and variants."] },
+                    { name: "Custom Design Processing", stories: ["As a developer, I need an endpoint to save design data as JSON.", "As a developer, I need a server-side process to generate a print-ready file from design data."] },
+                    { name: "Order & Payment Processing", stories: ["As a developer, I need an API to create an order and calculate the price.", "As a developer, I need to integrate with a payment gateway and handle webhooks."] },
+                    { name: "Inventory Management", stories: ["As a developer, I need the system to automatically decrement stock when an order is placed."] }
+                ]
+            },
+            admin: {
+                name: "Admin Panel",
+                features: [
+                    { name: "Dashboard", stories: ["As an admin, I want to see a dashboard with key metrics like total sales and new orders."] },
+                    { name: "Order Management", stories: ["As an admin, I want to view and filter all orders by status.", "As an admin, I want to update an order's status and add tracking info."] },
+                    { name: "Product Management", stories: ["As an admin, I want to add new products and manage their variants (colors, sizes, stock)."] },
+                    { name: "User Management", stories: ["As an admin, I want to view a list of all customers and their order history."] }
+                ]
+            }
+        }
+    },
+    databaseSchema: {
+        title: "Database Schema Visualizer",
+        intro: "This section provides an interactive view of the PostgreSQL database schema. The schema is designed to efficiently store all data related to users, products, custom designs, and orders. Click on a table name from the list to inspect its columns, data types, and relationships with other tables.",
+        tables: [
+            { name: "users", columns: [
+                { name: "id", type: "UUID", constraints: "Primary Key" },
+                { name: "email", type: "VARCHAR(255)", constraints: "Unique, Not Null" },
+                { name: "password_hash", type: "VARCHAR(255)", constraints: "Not Null" },
+                { name: "first_name", type: "VARCHAR(100)", constraints: "" },
+                { name: "last_name", type: "VARCHAR(100)", constraints: "" },
+            ], relations: "Has many `addresses`, `custom_designs`, and `orders`." },
+            { name: "products", columns: [
+                { name: "id", type: "SERIAL", constraints: "Primary Key" },
+                { name: "name", type: "VARCHAR(255)", constraints: "Not Null" },
+                { name: "description", type: "TEXT", constraints: "" },
+                { name: "base_price", type: "DECIMAL(10, 2)", constraints: "Not Null" },
+            ], relations: "Has many `product_variants`." },
+            { name: "product_variants", columns: [
+                { name: "id", type: "SERIAL", constraints: "Primary Key" },
+                { name: "product_id", type: "INTEGER", constraints: "FK -> products.id" },
+                { name: "color_name", type: "VARCHAR(50)", constraints: "Not Null" },
+                { name: "size", type: "VARCHAR(10)", constraints: "Not Null" },
+                { name: "stock_quantity", type: "INTEGER", constraints: "Not Null" },
+            ], relations: "Belongs to `products`. Is referenced in `order_items`." },
+            { name: "custom_designs", columns: [
+                { name: "id", type: "UUID", constraints: "Primary Key" },
+                { name: "user_id", type: "UUID", constraints: "FK -> users.id" },
+                { name: "design_data", type: "JSONB", constraints: "Not Null" },
+                { name: "preview_image_url", type: "VARCHAR(255)", constraints: "" },
+            ], relations: "Belongs to `users`. Is referenced in `order_items`." },
+            { name: "orders", columns: [
+                { name: "id", type: "SERIAL", constraints: "Primary Key" },
+                { name: "user_id", type: "UUID", constraints: "FK -> users.id" },
+                { name: "shipping_address_id", type: "INTEGER", constraints: "FK -> addresses.id" },
+                { name: "total_amount", type: "DECIMAL(10, 2)", constraints: "Not Null" },
+                { name: "status", type: "VARCHAR(50)", constraints: "Default 'Pending'" },
+            ], relations: "Belongs to `users`. Has many `order_items`." },
+            { name: "order_items", columns: [
+                { name: "id", type: "SERIAL", constraints: "Primary Key" },
+                { name: "order_id", type: "INTEGER", constraints: "FK -> orders.id" },
+                { name: "product_variant_id", type: "INTEGER", constraints: "FK -> product_variants.id" },
+                { name: "custom_design_id", type: "UUID", constraints: "FK -> custom_designs.id" },
+                { name: "quantity", type: "INTEGER", constraints: "Not Null" },
+            ], relations: "Belongs to `orders`." },
+            { name: "addresses", columns: [
+                { name: "id", type: "SERIAL", constraints: "Primary Key" },
+                { name: "user_id", type: "UUID", constraints: "FK -> users.id" },
+                { name: "street", type: "VARCHAR(255)", constraints: "Not Null" },
+                { name: "city", type: "VARCHAR(100)", constraints: "Not Null" },
+                { name: "country", type: "VARCHAR(100)", constraints: "Not Null" },
+            ], relations: "Belongs to `users`. Is referenced in `orders`." }
+        ]
+    },
+    apiReference: {
+        title: "RESTful API Reference",
+        intro: "This section documents the RESTful API endpoints required for the application to function. The API is organized by resources (e.g., Auth, Products, Orders). Click on any endpoint to expand it and view the HTTP method, path, and a description of its purpose.",
+        groups: [
+            { name: "Auth", endpoints: [
+                { method: "POST", path: "/api/auth/register", description: "Register a new user." },
+                { method: "POST", path: "/api/auth/login", description: "Log in a user and return a JWT." },
+                { method: "GET", path: "/api/auth/me", description: "Get the profile of the currently logged-in user (requires token)." }
+            ]},
+            { name: "Products", endpoints: [
+                { method: "GET", path: "/api/products", description: "Get a list of all base products (with variants)." },
+                { method: "GET", path: "/api/products/:id", description: "Get a single product by its ID (with variants)." }
+            ]},
+            { name: "Designs", endpoints: [
+                { method: "POST", path: "/api/designs", description: "Save a new custom design." },
+                { method: "GET", path: "/api/designs/user", description: "Get all saved designs for the logged-in user." },
+                { method: "PUT", path: "/api/designs/:id", description: "Update an existing design." }
+            ]},
+            { name: "Cart", endpoints: [
+                { method: "GET", path: "/api/cart", description: "Get the current user's cart (session-based)." },
+                { method: "POST", path: "/api/cart", description: "Add an item (variant + design) to the cart." },
+                { method: "PUT", path: "/api/cart/:itemId", description: "Update the quantity of an item in the cart." },
+                { method: "DELETE", path: "/api/cart/:itemId", description: "Remove an item from the cart." }
+            ]},
+            { name: "Orders", endpoints: [
+                { method: "POST", path: "/api/orders/checkout", description: "Create a payment intent with Stripe." },
+                { method: "POST", path: "/api/orders/webhook", description: "Handle payment confirmation webhook from Stripe to finalize an order." },
+                { method: "GET", path: "/api/orders", description: "Get the order history for the logged-in user." },
+                { method: "GET", path: "/api/orders/:id", description: "Get details for a single order." }
+            ]}
+        ]
+    },
+    systemArchitecture: {
+        title: "System Architecture & Best Practices",
+        intro: "This section visualizes the overall system architecture and outlines the strategies for security, scalability, and performance. Click on any component in the diagram to learn more about the best practices and third-party services that will be implemented to ensure the application is robust, secure, and efficient.",
+        components: [
+            { id: "security", name: "Security", details: [
+                "JWTs with short-lived access tokens and refresh tokens in HTTP-only cookies.",
+                "Hash all passwords using bcrypt.",
+                "Validate all incoming request bodies with Zod.",
+                "Offload payment processing to Stripe for PCI compliance.",
+                "Configure CORS to only allow requests from the frontend domain.",
+                "Store all secrets in environment variables."
+            ]},
+            { id: "scalability", name: "Scalability", details: [
+                "Design a stateless API backend for horizontal scaling.",
+                "Use a managed PostgreSQL service (e.g., Amazon RDS) for database replication and backups.",
+                "Store user-uploaded assets on a cloud storage service like AWS S3.",
+                "Use a CDN (e.g., Vercel's CDN, Cloudflare) to serve static assets globally."
+            ]},
+            { id: "performance", name: "Performance", details: [
+                "Use Next.js SSR/SSG for fast initial page loads.",
+                "Optimize images automatically with next/image.",
+                "Lazy load components and images that are not in the initial viewport.",
+                "Optimize database queries to avoid N+1 problems.",
+                "Implement a caching layer with Redis for frequently accessed data."
+            ]},
+            { id: "integrations", name: "3rd-Party Integrations", details: [
+                "**Payments:** Stripe",
+                "**Shipping:** Shippo or EasyPost",
+                "**Email:** SendGrid or Resend",
+                "**Asset Storage:** AWS S3",
+                "**Analytics:** Google Analytics & Hotjar",
+                "**Search:** Algolia"
+            ]},
+            { id: "devops", name: "DevOps & Deployment", details: [
+                "**Frontend:** Deploy Next.js to Vercel for optimized performance and CI/CD.",
+                "**Backend:** Package the Node.js app into a Docker container and deploy to AWS Fargate or Heroku.",
+                "**CI/CD:** Use GitHub Actions to automate linting, testing, building, and deploying on push to the main branch."
+            ]}
+        ]
+    }
+};
+
+let activeChart = null;
+
+function renderDashboard() {
+    const { title, intro, stats, chartData } = data.dashboard;
+    const container = document.getElementById('dashboard');
+    
+    let statsHtml = stats.map(stat => `
+        <div class="bg-white p-4 rounded-lg shadow-sm flex items-center gap-4">
+            <span class="text-3xl">${stat.icon}</span>
+            <div>
+                <p class="text-slate-500 text-sm">${stat.label}</p>
+                <p class="text-2xl font-bold text-indigo-800">${stat.value}</p>
+            </div>
+        </div>
+    `).join('');
+
+    container.innerHTML = `
+        <h2 class="text-3xl font-bold mb-2 text-slate-900">${title}</h2>
+        <p class="text-slate-600 mb-8 max-w-3xl">${intro}</p>
+        <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 mb-8">
+            ${statsHtml}
+        </div>
+        <div class="bg-white p-6 rounded-lg shadow-sm">
+            <h3 class="text-lg font-semibold mb-4">Feature Distribution</h3>
+            <div class="chart-container">
+                <canvas id="featureChart"></canvas>
+            </div>
+        </div>
+    `;
+
+    const ctx = document.getElementById('featureChart').getContext('2d');
+    if (activeChart) {
+        activeChart.destroy();
+    }
+    activeChart = new Chart(ctx, {
+        type: 'doughnut',
+        data: {
+            labels: chartData.labels,
+            datasets: [{
+                label: 'Number of Features',
+                data: chartData.data,
+                backgroundColor: [
+                    'rgba(79, 70, 229, 0.7)',  // Indigo
+                    'rgba(59, 130, 246, 0.7)', // Blue
+                    'rgba(16, 185, 129, 0.7)'  // Emerald
+                ],
+                borderColor: [
+                    'rgba(79, 70, 229, 1)',
+                    'rgba(59, 130, 246, 1)',
+                    'rgba(16, 185, 129, 1)'
+                ],
+                borderWidth: 1
+            }]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            plugins: {
+                legend: {
+                    position: 'top',
+                },
+                tooltip: {
+                    callbacks: {
+                        label: function(context) {
+                            let label = context.label || '';
+                            if (label) {
+                                label += ': ';
+                            }
+                            if (context.parsed !== null) {
+                                label += context.parsed;
+                            }
+                            return label;
+                        }
+                    }
+                }
+            }
+        }
+    });
+}
+
+function renderTechStack() {
+    const { title, intro, stacks } = data.techStack;
+    const container = document.getElementById('tech-stack');
+
+    let stacksHtml = stacks.map(stack => `
+        <div class="mb-8">
+            <h3 class="text-2xl font-semibold mb-4 border-b-2 border-indigo-200 pb-2">${stack.name}</h3>
+            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                ${stack.technologies.map(tech => `
+                    <div class="bg-white p-4 rounded-lg shadow-sm hover:shadow-md transition-shadow">
+                        <p class="font-bold text-indigo-700">${tech.name}</p>
+                        <p class="text-slate-600 text-sm">${tech.description}</p>
+                    </div>
+                `).join('')}
+            </div>
+        </div>
+    `).join('');
+
+    container.innerHTML = `
+        <h2 class="text-3xl font-bold mb-2 text-slate-900">${title}</h2>
+        <p class="text-slate-600 mb-8 max-w-3xl">${intro}</p>
+        ${stacksHtml}
+    `;
+}
+
+function renderFeatureExplorer() {
+    const { title, intro, categories } = data.featureExplorer;
+    const container = document.getElementById('feature-explorer');
+
+    container.innerHTML = `
+        <h2 class="text-3xl font-bold mb-2 text-slate-900">${title}</h2>
+        <p class="text-slate-600 mb-8 max-w-3xl">${intro}</p>
+        <div class="grid grid-cols-1 lg:grid-cols-3 gap-6 bg-white p-4 rounded-lg shadow-sm min-h-[60vh]">
+            <div id="feature-categories" class="flex flex-row lg:flex-col gap-2 border-b lg:border-b-0 lg:border-r border-slate-200 pb-4 lg:pb-0 lg:pr-4">
+                ${Object.keys(categories).map(key => `
+                    <button class="feature-btn w-full text-left p-2 rounded-md transition-colors ${key === 'frontend' ? 'active' : ''}" data-category="${key}">${categories[key].name}</button>
+                `).join('')}
+            </div>
+            <div id="feature-list" class="border-b lg:border-b-0 lg:border-r border-slate-200 pb-4 lg:pb-0 lg:pr-4">
+                <!-- Feature list will be rendered here -->
+            </div>
+            <div id="feature-details">
+                <!-- Feature details will be rendered here -->
+            </div>
+        </div>
+    `;
+
+    const categoriesContainer = container.querySelector('#feature-categories');
+    const featureListContainer = container.querySelector('#feature-list');
+    const featureDetailsContainer = container.querySelector('#feature-details');
+
+    function updateExplorer(categoryKey, featureIndex = 0) {
+        const category = categories[categoryKey];
+        
+        featureListContainer.innerHTML = `
+            <ul class="space-y-1">
+                ${category.features.map((feature, index) => `
+                    <li class="feature-list-item p-2 rounded-md cursor-pointer ${index === featureIndex ? 'active' : ''}" data-feature-index="${index}">${feature.name}</li>
+                `).join('')}
+            </ul>
+        `;
+        
+        const feature = category.features[featureIndex];
+        featureDetailsContainer.innerHTML = `
+            <h4 class="font-bold text-lg mb-2">${feature.name}</h4>
+            <p class="text-sm text-slate-500 mb-4">User Stories:</p>
+            <ul class="space-y-3 text-sm list-disc list-inside text-slate-700">
+                ${feature.stories.map(story => `<li>${story}</li>`).join('')}
+            </ul>
+        `;
+
+        featureListContainer.querySelectorAll('.feature-list-item').forEach(item => {
+            item.addEventListener('click', () => {
+                const newFeatureIndex = parseInt(item.dataset.featureIndex);
+                updateExplorer(categoryKey, newFeatureIndex);
+            });
+        });
+    }
+
+    categoriesContainer.addEventListener('click', (e) => {
+        if (e.target.matches('.feature-btn')) {
+            categoriesContainer.querySelectorAll('.feature-btn').forEach(btn => btn.classList.remove('active'));
+            e.target.classList.add('active');
+            updateExplorer(e.target.dataset.category);
+        }
+    });
+
+    updateExplorer('frontend');
+}
+
+function renderDatabaseSchema() {
+    const { title, intro, tables } = data.databaseSchema;
+    const container = document.getElementById('database-schema');
+
+    container.innerHTML = `
+        <h2 class="text-3xl font-bold mb-2 text-slate-900">${title}</h2>
+        <p class="text-slate-600 mb-8 max-w-3xl">${intro}</p>
+        <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+            <div class="lg:col-span-1 bg-white p-4 rounded-lg shadow-sm">
+                <h3 class="font-semibold mb-2">Tables</h3>
+                <ul id="db-table-list" class="space-y-1">
+                    ${tables.map((table, index) => `
+                        <li class="db-table-item p-2 rounded-md cursor-pointer ${index === 0 ? 'active' : ''}" data-table-index="${index}">${table.name}</li>
+                    `).join('')}
+                </ul>
+            </div>
+            <div id="db-table-details" class="lg:col-span-2 bg-white p-6 rounded-lg shadow-sm">
+                <!-- Table details will be rendered here -->
+            </div>
+        </div>
+    `;
+
+    const tableListContainer = container.querySelector('#db-table-list');
+    const tableDetailsContainer = container.querySelector('#db-table-details');
+
+    function updateTableDetails(tableIndex) {
+        const table = tables[tableIndex];
+        tableDetailsContainer.innerHTML = `
+            <h3 class="text-2xl font-bold text-indigo-800 mb-4">${table.name}</h3>
+            <div class="overflow-x-auto">
+                <table class="w-full text-sm text-left">
+                    <thead class="bg-slate-100">
+                        <tr>
+                            <th class="p-2 font-semibold">Column</th>
+                            <th class="p-2 font-semibold">Data Type</th>
+                            <th class="p-2 font-semibold">Constraints</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        ${table.columns.map(col => `
+                            <tr class="border-b">
+                                <td class="p-2 font-mono">${col.name}</td>
+                                <td class="p-2 font-mono text-purple-700">${col.type}</td>
+                                <td class="p-2 text-slate-600">${col.constraints}</td>
+                            </tr>
+                        `).join('')}
+                    </tbody>
+                </table>
+            </div>
+            <div class="mt-6">
+                <h4 class="font-semibold">Relationships</h4>
+                <p class="text-sm text-slate-600 mt-1">${table.relations}</p>
+            </div>
+        `;
+    }
+
+    tableListContainer.addEventListener('click', (e) => {
+        if (e.target.matches('.db-table-item')) {
+            tableListContainer.querySelectorAll('.db-table-item').forEach(item => item.classList.remove('active'));
+            e.target.classList.add('active');
+            updateTableDetails(parseInt(e.target.dataset.tableIndex));
+        }
+    });
+
+    updateTableDetails(0);
+}
+
+function renderApiReference() {
+    const { title, intro, groups } = data.apiReference;
+    const container = document.getElementById('api-reference');
+
+    const methodColors = {
+        GET: 'bg-blue-100 text-blue-800',
+        POST: 'bg-green-100 text-green-800',
+        PUT: 'bg-yellow-100 text-yellow-800',
+        DELETE: 'bg-red-100 text-red-800'
+    };
+
+    container.innerHTML = `
+        <h2 class="text-3xl font-bold mb-2 text-slate-900">${title}</h2>
+        <p class="text-slate-600 mb-8 max-w-3xl">${intro}</p>
+        <div class="space-y-6">
+            ${groups.map(group => `
+                <div>
+                    <h3 class="text-xl font-semibold mb-3">${group.name}</h3>
+                    <div class="space-y-2">
+                        ${group.endpoints.map(endpoint => `
+                            <div class="api-endpoint bg-white rounded-lg shadow-sm border border-slate-200">
+                                <div class="p-3 flex items-center justify-between cursor-pointer">
+                                    <div class="flex items-center gap-4">
+                                        <span class="font-mono text-sm font-semibold px-2 py-1 rounded-md ${methodColors[endpoint.method]}">${endpoint.method}</span>
+                                        <span class="font-mono text-slate-700">${endpoint.path}</span>
+                                    </div>
+                                    <svg class="w-5 h-5 text-slate-400 transform transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path></svg>
+                                </div>
+                                <div class="details px-4 pb-3">
+                                    <p class="text-sm text-slate-600 border-t border-slate-200 pt-3">${endpoint.description}</p>
+                                </div>
+                            </div>
+                        `).join('')}
+                    </div>
+                </div>
+            `).join('')}
+        </div>
+    `;
+
+    container.querySelectorAll('.api-endpoint').forEach(endpoint => {
+        endpoint.addEventListener('click', () => {
+            endpoint.classList.toggle('open');
+            const icon = endpoint.querySelector('svg');
+            icon.classList.toggle('rotate-180');
+        });
+    });
+}
+
+function renderSystemArchitecture() {
+    const { title, intro, components } = data.systemArchitecture;
+    const container = document.getElementById('system-architecture');
+
+    container.innerHTML = `
+        <h2 class="text-3xl font-bold mb-2 text-slate-900">${title}</h2>
+        <p class="text-slate-600 mb-8 max-w-3xl">${intro}</p>
+        <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+            <div class="lg:col-span-1 bg-white p-4 rounded-lg shadow-sm">
+                <h3 class="font-semibold mb-2">Components</h3>
+                <div id="arch-component-list" class="space-y-2">
+                    ${components.map((comp, index) => `
+                        <button class="w-full text-left p-2 rounded-md transition-colors feature-btn ${index === 0 ? 'active' : ''}" data-component-id="${comp.id}">${comp.name}</button>
+                    `).join('')}
+                </div>
+            </div>
+            <div id="arch-component-details" class="lg:col-span-2 bg-white p-6 rounded-lg shadow-sm min-h-[40vh]">
+                <!-- Component details will be rendered here -->
+            </div>
+        </div>
+    `;
+
+    const componentList = container.querySelector('#arch-component-list');
+    const componentDetails = container.querySelector('#arch-component-details');
+
+    function updateArchDetails(componentId) {
+        const component = components.find(c => c.id === componentId);
+        componentDetails.innerHTML = `
+            <h3 class="text-2xl font-bold text-indigo-800 mb-4">${component.name}</h3>
+            <ul class="space-y-3 text-sm list-disc list-inside text-slate-700">
+                ${component.details.map(detail => `<li>${detail.replace(/\*\*(.*?)\*\*/g, '<strong class="font-semibold text-slate-800">$1</strong>')}</li>`).join('')}
+            </ul>
+        `;
+    }
+
+    componentList.addEventListener('click', (e) => {
+        if (e.target.matches('button')) {
+            componentList.querySelectorAll('button').forEach(btn => btn.classList.remove('active'));
+            e.target.classList.add('active');
+            updateArchDetails(e.target.dataset.componentId);
+        }
+    });
+
+    updateArchDetails(components[0].id);
+}
+
+const views = {
+    'dashboard': renderDashboard,
+    'tech-stack': renderTechStack,
+    'feature-explorer': renderFeatureExplorer,
+    'database-schema': renderDatabaseSchema,
+    'api-reference': renderApiReference,
+    'system-architecture': renderSystemArchitecture,
+};
+
+function switchView(viewId) {
+    document.querySelectorAll('.content-view').forEach(view => {
+        view.classList.remove('active');
+    });
+    document.getElementById(viewId).classList.add('active');
+    
+    document.querySelectorAll('.nav-link').forEach(link => {
+        link.classList.remove('active');
+        if (link.dataset.view === viewId) {
+            link.classList.add('active');
+        }
+    });
+
+    if (views[viewId]) {
+        views[viewId]();
+    }
+}
+
+document.addEventListener('DOMContentLoaded', () => {
+    const nav = document.getElementById('sidebar-nav');
+    nav.addEventListener('click', (e) => {
+        e.preventDefault();
+        const link = e.target.closest('.nav-link');
+        if (link) {
+            switchView(link.dataset.view);
+        }
+    });
+    
+    // Initial render
+    switchView('dashboard');
+});
+</script>
+</body>
+</html>
