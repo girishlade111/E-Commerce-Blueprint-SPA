@@ -1,72 +1,48 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>README - Custom Apparel Store Blueprint</title>
-    <script src="https://cdn.tailwindcss.com"></script>
-    <style>
-        body {
-            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Helvetica, Arial, sans-serif, "Apple Color Emoji", "Segoe UI Emoji";
-        }
-        h1, h2, h3 {
-            border-bottom: 1px solid #d0d7de;
-            padding-bottom: 0.3em;
-        }
-        code {
-            font-family: ui-monospace, SFMono-Regular, SF Mono, Menlo, Consolas, Liberation Mono, monospace;
-            background-color: rgba(209, 213, 219, 0.4);
-            padding: 0.2em 0.4em;
-            margin: 0;
-            font-size: 85%;
-            border-radius: 6px;
-        }
-        pre {
-            background-color: #f6f8fa;
-            border-radius: 6px;
-            padding: 16px;
-            overflow: auto;
-        }
-        pre code {
-            background-color: transparent;
-            padding: 0;
-            margin: 0;
-            font-size: 100%;
-        }
-    </style>
-</head>
-<body class="bg-white text-gray-900">
-    <main class="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-        <article class="prose lg:prose-xl">
-            <h1 class="text-4xl font-bold mb-4">Custom Apparel E-Commerce Store Blueprint</h1>
-            <p class="text-lg text-gray-600">This document provides a comprehensive technical blueprint for a full-stack e-commerce platform specializing in custom-printed apparel. It serves as a complete roadmap for the development team, covering everything from the technology stack to deployment.</p>
+# E-Commerce Blueprint SPA
 
+An interactive single-page application that presents a complete technical blueprint for a **Custom Apparel E-Commerce Store**. It is not a shopping site itself — it is a polished, interactive planning/reference document rendered as a web app: architecture, tech stack, feature breakdown, database schema, and API reference, all explorable from a sidebar navigation.
 
-cd custom-apparel-store</code></pre>
-            <h3 class="text-xl font-semibold mt-4 mb-2">2. Install Dependencies</h3>
-            <p>Install the necessary packages for both the frontend and backend.</p>
-            <pre><code># In the /frontend directory
-npm install
+## Features
 
-# In the /backend directory
-npm install</code></pre>
-            <h3 class="text-xl font-semibold mt-4 mb-2">3. Set Up Environment Variables</h3>
-            <p>Create a <code>.env</code> file in the <code>/backend</code> directory. You will need to add your database connection string and other secret keys.</p>
-            <pre><code>DATABASE_URL="postgresql://user:password@localhost:5432/mydb"
-JWT_SECRET="your_jwt_secret"
-STRIPE_SECRET_KEY="your_stripe_secret_key"</code></pre>
-            <h3 class="text-xl font-semibold mt-4 mb-2">4. Run Database Migrations</h3>
-            <p>Use Prisma to sync your database schema.</p>
-            <pre><code># In the /backend directory
-npx prisma migrate dev</code></pre>
-            <h3 class="text-xl font-semibold mt-4 mb-2">5. Start the Development Servers</h3>
-            <p>Run both the frontend and backend applications concurrently.</p>
-            <pre><code># Start the backend API server (from /backend)
-npm run dev
+- **Project Dashboard** — high-level overview of the blueprint, scope, and project metrics
+- **Tech Stack Explorer** — the recommended stack, with rationale for each choice
+- **Feature Explorer** — browsable catalog of planned store features, organized by category, with per-feature detail views
+- **System Architecture** — interactive diagrams of how the store's systems fit together
+- **Database Schema** — entity relationships and schema reference for the store's data model
+- **API Reference** — endpoint-style reference for the store's backend services
+- **Warm neutral UI** — Tailwind CSS utility styling, responsive layout, sidebar navigation
 
-# Start the frontend Next.js server (from /frontend)
-npm run dev</code></pre>
-        </article>
-    </main>
-</body>
-</html>
+## Tech Stack
+
+- Plain **HTML + CSS + JavaScript** (single self-contained file, no build step)
+- **Tailwind CSS** via CDN for styling
+- No frameworks, no dependencies, no backend
+
+## Quick Start
+
+No install, no build. Open `index.html` in any modern browser:
+
+```bash
+git clone https://github.com/girishlade111/E-Commerce-Blueprint-SPA.git
+cd E-Commerce-Blueprint-SPA
+# open index.html in your browser, or serve it:
+npx serve .
+```
+
+## Project Structure
+
+```
+E-Commerce-Blueprint-SPA/
+├── index.html      # The entire application (markup, styles, data, logic)
+└── README.md       # This file
+```
+
+Everything lives in one file: the blueprint data, the render functions for each section (`renderDashboard`, `renderTechStack`, `renderFeatureExplorer`, `renderSystemArchitecture`, `renderDatabaseSchema`, `renderApiReference`), and the sidebar navigation that switches between them.
+
+## Deploy Notes
+
+Static site — deploy anywhere that serves static files (GitHub Pages, Netlify, Cloudflare Pages). This repo is live on GitHub Pages.
+
+---
+
+Built by Girish Lade · https://ladestack.in
